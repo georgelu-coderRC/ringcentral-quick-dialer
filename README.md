@@ -1,5 +1,7 @@
 # RingCentral Quick Dialer
 
+> **A RingCentral Labs product.** RingCentral Labs are experimental apps created by RingCentral's engineers. You can use these apps as-is, or fork the code from GitHub to create an app that solves your business's unique challenges. Please note that Labs apps do not come with an SLA or support outside of that provided via our community and in the forums.
+
 A Chrome extension that finds phone numbers on any web page and dials them through your RingCentral account, with automatic dialing of the next number when each call ends.
 
 ## Features

@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.keys/
+.env
+.env.local
+.env.production
+.env.*.local
+*.pem
+.DS_Store
+.factory/

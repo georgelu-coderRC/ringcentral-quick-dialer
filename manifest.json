@@ -1,0 +1,58 @@
+{
+  "manifest_version": 3,
+  "name": "RingCentral Quick Dialer",
+  "version": "2.0.0",
+  "description": "Scrape phone numbers, queue them, and auto-dial via RingCentral Web Phone (WebRTC).",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAulpFqU3WXU+56uf4GTOEzpNWIqUwd5zLrrfxJmA54HtoRCzP3M/lZczj+xd2g/CvyCPgKrU1yUt4OvkQk5J7SSzMGc28UOnMzlK9FQXmkGbXpi9urm1pvK7WUlwfzOnhMk5jGMkKd32N8cOYViUtXd2Wq3siv3C7TFNABBi5fbi70HSIge8jPdPfUVIO34TT5JVOsJWY49+7KoC00EdMITDPA5nuSsNSxNiJyLqeoOBIAcEgsTCRt5aR3RTaONfTFoXbDZ/HPWpALza0s2TS5/fC8Kari2W9jiMBLX/MjJz9/YV4Q3cwms1GLYlUXYHunn9hyFH3PXXkHk6TZqwr+QIDAQAB",
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "storage",
+    "identity",
+    "offscreen",
+    "alarms",
+    "sidePanel"
+  ],
+  "side_panel": {
+    "default_path": "popup.html"
+  },
+  "host_permissions": [
+    "https://platform.ringcentral.com/*",
+    "https://*.ringcentral.com/*",
+    "wss://*.ringcentral.com/*",
+    "http://*/*",
+    "https://*/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "RingCentral Quick Dialer (opens side panel)",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "offscreen.html",
+        "dial.html",
+        "dial.js",
+        "scraper.js",
+        "vendor/*"
+      ],
+      "matches": [
+        "<all_urls>"
+      ]
+    }
+  ]
+}

@@ -41,8 +41,8 @@ For Google Sheets (which renders on a canvas), use **Paste numbers** in the Foun
 ## Building from source
 
 ```bash
-git clone https://github.com/<your-username>/ringcentral-dialer-extension.git
-cd ringcentral-dialer-extension
+git clone https://github.com/<your-username>/ringcentral-quick-dialer.git
+cd ringcentral-quick-dialer
 npm install
 echo "VITE_RC_CLIENT_ID=your_ringcentral_client_id" > .env.production
 npm run build

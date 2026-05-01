@@ -15,7 +15,7 @@
 
 set -euo pipefail
 
-REPO_NAME="${REPO_NAME:-ringcentral-dialer-extension}"
+REPO_NAME="${REPO_NAME:-ringcentral-quick-dialer}"
 RC_CLIENT_ID="${VITE_RC_CLIENT_ID:-dPeDL2pD4imcpLyHyfWpfy}"
 
 cd "$(dirname "$0")/.."

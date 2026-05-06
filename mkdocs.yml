@@ -1,0 +1,81 @@
+site_name: RingCentral Quick Dialer
+site_description: Chrome extension that turns any web page into a one-click call list, with auto-dial-on-hangup via RingCentral.
+site_url: https://georgelu-coderrc.github.io/ringcentral-quick-dialer/
+repo_url: https://github.com/georgelu-coderRC/ringcentral-quick-dialer
+repo_name: georgelu-coderRC/ringcentral-quick-dialer
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  logo: logo.png
+  favicon: logo.png
+  palette:
+    - media: "(prefers-color-scheme)"
+      toggle:
+        icon: material/brightness-auto
+        name: Switch to light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: deep orange
+      accent: blue
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: deep orange
+      accent: blue
+      toggle:
+        icon: material/brightness-4
+        name: Switch to system preference
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.tabs
+    - navigation.sections
+    - navigation.top
+    - navigation.footer
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.action.edit
+    - toc.follow
+  font:
+    text: Inter
+    code: JetBrains Mono
+
+nav:
+  - Home: index.md
+  - Setup: setup.md
+  - Daily Usage: usage.md
+  - Tips: tips.md
+  - Troubleshooting: troubleshooting.md
+  - Privacy: privacy.md
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.keys
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/georgelu-coderRC/ringcentral-quick-dialer
+  generator: false
+
+copyright: A RingCentral Labs project &middot; MIT licensed

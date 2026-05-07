@@ -80,7 +80,7 @@ npm run build       # outputs dist/
 ├── .github/workflows/release.yml  # auto-build & release on tag push
 ├── background.js                  # service worker: OAuth, dialing, polling, autodial
 ├── dial.html / dial.js            # invisible bridge tab that triggers rcapp:// dial
-├── icons/icon{16,32,48,128}.png   # PC-circle logo (extracted from user reference)
+├── icons/icon{16,32,48,128}.png   # Lightning-bolt logo on RC blue→orange gradient
 ├── manifest.json                  # MV3 manifest with pinned `key`
 ├── offscreen.{html,js}            # offscreen document for WebRTC (currently unused)
 ├── public/scraper.js              # injected into pages to find phone numbers

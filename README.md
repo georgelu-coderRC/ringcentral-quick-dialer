@@ -16,17 +16,11 @@ A Chrome extension that finds phone numbers on any web page and dials them throu
 
 ## Install
 
-> **Requires Chrome with Developer mode.**
-
-1. Go to the [Releases page](../../releases/latest) and download the latest `RingCentral-Quick-Dialer-vX.Y.Z.zip`.
-2. Unzip it somewhere permanent (e.g. `~/Documents/`).
-3. Open `chrome://extensions` in Chrome.
-4. Toggle **Developer mode** on (top-right).
-5. Click **Load unpacked** and select the unzipped folder.
-6. Pin the extension to your toolbar from the puzzle-piece menu.
-7. Click the icon, open **Settings**, and click **Connect to RingCentral**.
-
-> **Important:** Always select the top-level unzipped folder (it contains `manifest.json`). Don't select a parent folder — Chrome will throw service-worker errors.
+1. Open the [RingCentral Quick Dialer listing in the Chrome Web Store](https://chromewebstore.google.com/detail/ringcentral-quick-dialer/ldjckpipdcjhkaefdglkimakkognecck).
+2. Click **Add to Chrome**.
+3. Confirm the permissions prompt.
+4. Pin the extension to your toolbar from the puzzle-piece menu.
+5. Click the icon, open **Settings**, and click **Connect to RingCentral**.
 
 ## Usage
 
@@ -48,7 +42,7 @@ echo "VITE_RC_CLIENT_ID=your_ringcentral_client_id" > .env.production
 npm run build
 ```
 
-The built extension is in `dist/`. Load that folder in Chrome via **Load unpacked**.
+The built extension is in `dist/`. End users should install the published extension from the Chrome Web Store.
 
 ## Releases
 

@@ -10,8 +10,7 @@ work on this project. Read this first.
 A Chrome MV3 browser extension ("RingCentral Quick Dialer") that scrapes
 phone numbers from the active web page (or accepts pasted lists), queues them,
 and dials each number through RingCentral's web phone with auto-dial-on-hangup
-between calls. Distributed via the **RingCentral App Gallery** as a sideloaded
-zip, not the Chrome Web Store.
+between calls. Distributed via the **Chrome Web Store**.
 
 Branding: this is a **RingCentral Labs** product (experimental, no SLA).
 
@@ -27,9 +26,10 @@ Branding: this is a **RingCentral Labs** product (experimental, no SLA).
 | Default branch | `main` |
 | Visibility | Public |
 | Latest release | https://github.com/georgelu-coderRC/ringcentral-quick-dialer/releases/latest |
-| Stable zip URL | https://github.com/georgelu-coderRC/ringcentral-quick-dialer/releases/latest/download/RingCentral-Quick-Dialer.zip |
+| Latest release zip | https://github.com/georgelu-coderRC/ringcentral-quick-dialer/releases/latest/download/RingCentral-Quick-Dialer.zip |
 | Landing page (GitHub Pages) | https://georgelu-coderrc.github.io/ringcentral-quick-dialer/ |
 | User guide PDF | https://georgelu-coderrc.github.io/ringcentral-quick-dialer/RingCentral-Quick-Dialer-User-Guide.pdf |
+| Chrome Web Store listing | https://chromewebstore.google.com/detail/ringcentral-quick-dialer/ldjckpipdcjhkaefdglkimakkognecck |
 
 ### Required GitHub Actions secret
 
@@ -65,9 +65,8 @@ echo "VITE_RC_CLIENT_ID=dPeDL2pD4imcpLyHyfWpfy" > .env.production
 npm run build       # outputs dist/
 ```
 
-> **Important:** always load `dist/` into Chrome (`chrome://extensions` →
-> Developer mode → Load unpacked). Loading the project root will fail because
-> the source files use Vite-only `import.meta.env`.
+> **Important:** end users should install from the Chrome Web Store. Local
+> builds are only for development/testing.
 
 ---
 
@@ -147,11 +146,9 @@ LocalHold / Busy       → "Wrapping up…" / "Busy" (amber)
 ## Distribution
 
 1. Tag a version: `git tag v3.0.1 && git push --tags`
-2. GitHub Actions builds + publishes a release with TWO zips:
-   - `RingCentral-Quick-Dialer-vX.Y.Z.zip` (versioned archive)
-   - `RingCentral-Quick-Dialer.zip` (versionless — for stable App Gallery link)
-3. The App Gallery listing links to the stable zip URL.
-4. Users sideload via `chrome://extensions` → Developer mode → Load unpacked.
+2. GitHub Actions builds + publishes a release zip for archival/testing.
+3. Publish the approved build to the Chrome Web Store listing.
+4. Users install and receive updates through the Chrome Web Store.
 
 ### To bump version
 Update **both** `package.json` and `manifest.json` (must match), commit, tag,
@@ -161,7 +158,7 @@ push tags. The workflow handles the rest.
 
 ## Things that were considered and rejected
 
-- **Chrome Web Store distribution**: explicitly not pursued. App Gallery only.
+- **Zip-based direct distribution**: replaced by Chrome Web Store distribution.
 - **WebRTC web phone in offscreen document**: was scaffolded then abandoned in
   favor of the simpler `rcapp://` deep-link bridge (works on macOS where the RC
   app is installed). Files remain (`offscreen.{html,js}`) but are unused.
@@ -220,6 +217,6 @@ the repo + a copy of the session log into a single zip you can hand off.
 2. Clone: `git clone https://github.com/georgelu-coderRC/ringcentral-quick-dialer.git`
 3. Get `.keys/extension-key.pem` and `.env.production` from secure backup.
 4. `npm install --legacy-peer-deps && npm run build`
-5. Load `dist/` in Chrome via `chrome://extensions` → Load unpacked.
+5. For local development only, test the built `dist/` extension in Chrome.
 6. Click extension icon → Settings → Connect to RingCentral.
 7. Test on a page with phone numbers.

@@ -4,9 +4,9 @@
 
 The RingCentral app's redirect URI doesn't match the extension. Contact your administrator — the redirect URI must be configured in the RingCentral developer portal exactly as shown in **Settings → Advanced → Redirect URI**.
 
-## Extension shows errors and a blank panel
+## Extension is missing from Chrome
 
-You probably loaded the project root folder instead of the built `dist/` folder. Remove the extension from `chrome://extensions`, then click **Load unpacked** and select the unzipped folder that directly contains `manifest.json`.
+Open the [Chrome Web Store listing](https://chromewebstore.google.com/detail/ringcentral-quick-dialer/ldjckpipdcjhkaefdglkimakkognecck) and confirm the extension is installed. If it is installed but not visible in the toolbar, click the puzzle-piece icon and pin **RingCentral Quick Dialer**.
 
 ## "Connected" but dialing does nothing
 

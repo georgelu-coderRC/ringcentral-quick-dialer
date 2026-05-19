@@ -1,46 +1,25 @@
-# Setup — RingCentral Quick Dialer v2.1
+# Setup — RingCentral Quick Dialer
 
-Calls go through the **RingEX (RingCentral) desktop app** via `rcapp://` deep links. The extension uses your RingCentral OAuth login to **detect when each call ends** so it can auto-dial the next number in your queue. Setup takes ~10 minutes.
+Calls go through the **RingEX (RingCentral) desktop app** via `rcapp://` deep links. The extension uses your RingCentral OAuth login to **detect when each call ends** so it can auto-dial the next number in your queue.
 
-## 1. Create a RingCentral developer app
+## 1. Install from the Chrome Web Store
 
-1. Go to https://developers.ringcentral.com/ and sign in (or sign up).
-2. Click **Create App** in the dashboard.
-3. Configure:
-   - **Application Type**: REST API App
-   - **Platform Type**: Browser-Based
-   - **Auth Type**: Authorization Code with PKCE
-   - **Allow it to call APIs from**: Your own RingCentral account is fine for testing
-4. **App Permissions / Scopes** — add:
-   - `ReadAccounts`
-   - `ReadCallLog`
-   - `ReadPresence`
-   - (Optional, if you ever switch to the WebRTC web-phone mode: `VoipCalling`)
-5. Save the app. Copy the **Client ID** that gets displayed.
+1. Open the [RingCentral Quick Dialer listing in the Chrome Web Store](https://chromewebstore.google.com/detail/ringcentral-quick-dialer/ldjckpipdcjhkaefdglkimakkognecck).
+2. Click **Add to Chrome**.
+3. Confirm the permissions prompt.
+4. Pin the extension to your toolbar from the puzzle-piece menu.
 
-## 2. Configure the redirect URI
+Chrome updates the extension automatically when new versions are published.
 
-The extension uses Chrome's identity API which generates a redirect URI specific to your installed extension.
+## 2. Connect
 
-1. Load the extension as **Unpacked** in `chrome://extensions` (Developer mode ON → Load unpacked → select this folder).
-2. Open the extension popup → **Settings** tab.
-3. Expand **Setup instructions** and copy the **redirect URI** shown there. It will look like:
-   ```
-   https://abcdef1234567890.chromiumapp.org/oauth
-   ```
-4. Back in the RingCentral developer dashboard, edit your app:
-   - **OAuth Redirect URIs** → paste the URI from step 3
-   - Save
+1. Click the **Quick Dialer** icon in the Chrome toolbar.
+2. Open the **Settings** tab.
+3. Click **Connect to RingCentral**.
+4. A RingCentral login window opens — sign in with your normal RingCentral credentials.
+5. Status changes to **Connected**.
 
-## 3. Connect
-
-1. In the extension popup → **Settings** tab
-2. Paste your **Client ID** into the input field
-3. Click **Save**, then **Connect to RingCentral**
-4. A RingCentral login window opens — sign in
-5. Status changes to **Connected**
-
-## 4. Make a call
+## 3. Make a call
 
 1. Open any page with phone numbers (or paste from Google Sheets)
 2. Switch to **Queue** tab
@@ -57,7 +36,7 @@ After each `rcapp://` dial, the extension polls `/restapi/v1.0/account/~/extensi
 - The OAuth token is used **only for read access** (active-calls polling), never for placing calls.
 - Tokens stored locally in `chrome.storage.local`. Click **Disconnect** to revoke and clear them.
 - The WebRTC web-phone code is preserved but dormant in this build — can be re-enabled any time.
-- Debug: `chrome://extensions` → your extension → **service worker** link to see polling logs.
+- Debug logs are available from Chrome's extension details page for RingCentral Quick Dialer.
 
 ## Files
 

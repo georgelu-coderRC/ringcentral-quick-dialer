@@ -47,8 +47,7 @@ jobs:
           cd dist
           # Versioned zip (archive of this specific release)
           zip -r "../RingCentral-Quick-Dialer-${{ steps.ver.outputs.version }}.zip" . -x "*.DS_Store"
-          # Versionless zip — stable filename so external links keep working
-          # across releases (e.g. for the RingCentral App Gallery)
+          # Versionless zip — stable filename for release archives and testing.
           zip -r "../RingCentral-Quick-Dialer.zip" . -x "*.DS_Store"
           cd ..
           ls -lh *.zip

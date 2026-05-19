@@ -5,7 +5,7 @@
 !!! warning "RingCentral Labs"
     This is a **RingCentral Labs** product. Labs are experimental apps created by RingCentral's engineers. You can use these apps as-is, or fork the code on GitHub. **Labs apps do not come with an SLA or support outside of community forums.**
 
-[:material-download: Download the latest release](https://github.com/georgelu-coderRC/ringcentral-quick-dialer/releases/latest/download/RingCentral-Quick-Dialer.zip){ .md-button .md-button--primary }
+[:material-google-chrome: Install from Chrome Web Store](https://chromewebstore.google.com/detail/ringcentral-quick-dialer/ldjckpipdcjhkaefdglkimakkognecck){ .md-button .md-button--primary }
 [:material-file-pdf-box: PDF guide](RingCentral-Quick-Dialer-User-Guide.pdf){ .md-button }
 [:material-github: View on GitHub](https://github.com/georgelu-coderRC/ringcentral-quick-dialer){ .md-button }
 
@@ -20,7 +20,7 @@
 
 ## Quick start
 
-1. **[Install](setup.md)** — Download the zip from the [RingCentral App Gallery](https://www.ringcentral.com/apps/) and sideload via `chrome://extensions`
+1. **[Install](setup.md)** — Add RingCentral Quick Dialer from the Chrome Web Store
 2. **[Connect](setup.md#step-2-connect-your-ringcentral-account)** — Click the extension icon → Settings → Connect to RingCentral
 3. **[Dial](usage.md)** — Open the Found tab on any page, add numbers, and start calling
 

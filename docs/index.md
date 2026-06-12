@@ -12,7 +12,7 @@
 ## What it does
 
 - :material-magnify: **Auto-detect numbers** on any HTML-based page (CRMs, dashboards, web apps)
-- :material-content-paste: **Paste a column** from Google Sheets, Excel, or CSV — numbers are normalized to E.164
+- :material-content-paste: **Paste names and numbers** from Google Sheets, Excel, or CSV — numbers are normalized to E.164
 - :material-drag-vertical: **Drag-and-drop call list** with "Up next" pill
 - :material-phone-forward: **Auto-dial** the next number after a configurable delay (off / 3s / 5s / 10s / 30s / custom)
 - :material-eye: **Live call status** indicator (Ready / Ringing / On a call / Wrapping up)

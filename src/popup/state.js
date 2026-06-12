@@ -2,6 +2,9 @@ import { useEffect, useState, useCallback, useRef } from "react";
 
 const PHONE_REGEX =
   /(?:\+?1[\s.\-]?)?\(?([2-9]\d{2})\)?[\s.\-]?([2-9]\d{2})[\s.\-]?(\d{4})(?!\d)/g;
+const PHONE_CHECK_REGEX =
+  /(?:\+?1[\s.\-]?)?\(?([2-9]\d{2})\)?[\s.\-]?([2-9]\d{2})[\s.\-]?(\d{4})(?!\d)/;
+const CONTACT_NAME_MAX = 80;
 
 export function bg(msg) {
   return chrome.runtime.sendMessage(msg);
@@ -14,6 +17,39 @@ export function formatPhone(e164) {
   const m10 = String(e164).match(/^\+?(\d{3})(\d{3})(\d{4})$/);
   if (m10) return `(${m10[1]}) ${m10[2]}-${m10[3]}`;
   return String(e164);
+}
+
+export function formatContactLabel(itemOrE164, fallbackName = "") {
+  const safeFallbackName = typeof fallbackName === "string" ? fallbackName : "";
+  const item = typeof itemOrE164 === "string" ? { e164: itemOrE164, name: safeFallbackName } : (itemOrE164 || {});
+  const phone = formatPhone(item.e164);
+  const name = normalizeContactName(item.name || safeFallbackName || "");
+  return name ? `${name} (${phone})` : phone;
+}
+
+function normalizeContactName(value) {
+  return String(value || "")
+    .replace(/\b(?:phone|mobile|cell|work|home|direct|number|tel)\b\s*:?\s*/gi, " ")
+    .replace(/[<>(){}\[\]"“”'`]+/g, " ")
+    .replace(/[\t,;|]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/^[\s:.-]+|[\s:.-]+$/g, "")
+    .slice(0, CONTACT_NAME_MAX);
+}
+
+function extractNameFromLine(line, matchIndex, matchText) {
+  const before = line.slice(0, matchIndex);
+  const after = line.slice(matchIndex + matchText.length);
+  const candidates = [before, after, `${before} ${after}`];
+  for (const candidate of candidates) {
+    const name = normalizeContactName(candidate);
+    const hasPhone = PHONE_CHECK_REGEX.test(name);
+    if (/[A-Za-z]/.test(name) && !hasPhone) {
+      return name;
+    }
+  }
+  return "";
 }
 
 export function useStorage(key, defaultVal) {
@@ -65,12 +101,18 @@ export function useActiveTab() {
 
 export function parseNumbers(text, contextLabel = "from pasted text") {
   const map = new Map();
-  PHONE_REGEX.lastIndex = 0;
-  let m;
-  while ((m = PHONE_REGEX.exec(text)) !== null) {
-    const e164 = `+1${m[1]}${m[2]}${m[3]}`;
-    if (!map.has(e164)) {
-      map.set(e164, { e164, display: m[0].trim(), contexts: [contextLabel] });
+  for (const line of String(text || "").split(/\r?\n/)) {
+    PHONE_REGEX.lastIndex = 0;
+    let m;
+    while ((m = PHONE_REGEX.exec(line)) !== null) {
+      const e164 = `+1${m[1]}${m[2]}${m[3]}`;
+      const name = extractNameFromLine(line, m.index, m[0]);
+      const existing = map.get(e164);
+      if (!existing) {
+        map.set(e164, { e164, display: m[0].trim(), name, contexts: [contextLabel] });
+      } else if (!existing.name && name) {
+        map.set(e164, { ...existing, name });
+      }
     }
   }
   return Array.from(map.values());
@@ -91,7 +133,7 @@ export function useScanner(tab) {
     if (!/^https?:/.test(tab.url)) {
       setItems([]);
       setStatus({
-        text: "Switch to a webpage with phone numbers, or use Paste numbers.",
+        text: "Switch to a webpage with phone numbers, or use Paste names/numbers.",
         kind: "info",
       });
       return;
@@ -108,7 +150,7 @@ export function useScanner(tab) {
       } else if (!found.length) {
         setStatus({ text: "No phone numbers found on this page.", kind: "warning" });
       } else {
-        setStatus({ text: "Select numbers to add to your call list.", kind: "info" });
+        setStatus({ text: "Select contacts to add to your call list.", kind: "info" });
       }
     } catch (e) {
       setItems([]);

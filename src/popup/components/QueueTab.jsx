@@ -1,10 +1,13 @@
 import React, { useState } from "react";
 import { Button, Switch, Alert, EmptyState } from "@ringcentral/spring-ui";
-import { formatPhone } from "../state.js";
+import { formatPhone, parseNumbers } from "../state.js";
 
 export default function QueueTab({ queue, setQueue, autodialOnEnd, setAutodial, dial, pollStatus, connected, switchTo }) {
   const [dragIdx, setDragIdx] = useState(null);
   const [overIdx, setOverIdx] = useState(null);
+  const [manualName, setManualName] = useState("");
+  const [manualPhone, setManualPhone] = useState("");
+  const [manualError, setManualError] = useState("");
 
   const callIdx = async (idx) => {
     const item = queue[idx];
@@ -12,7 +15,7 @@ export default function QueueTab({ queue, setQueue, autodialOnEnd, setAutodial, 
     const next = queue.slice();
     next.splice(idx, 1);
     setQueue(next);
-    await dial(item.e164);
+    await dial(item);
   };
   const move = (idx, dir) => {
     const next = queue.slice();
@@ -30,6 +33,22 @@ export default function QueueTab({ queue, setQueue, autodialOnEnd, setAutodial, 
     if (!queue.length) return;
     if (!confirm(`Clear all ${queue.length} number(s) from your call list?`)) return;
     setQueue([]);
+  };
+  const addManual = () => {
+    const parsed = parseNumbers(`${manualName}\t${manualPhone}`, "manual entry");
+    if (!parsed.length) {
+      setManualError("Enter a valid phone number.");
+      return;
+    }
+    const nextContact = { ...parsed[0], name: manualName.trim() || parsed[0].name || "", source: "manual entry", addedAt: Date.now() };
+    if (queue.some((q) => q.e164 === nextContact.e164)) {
+      setManualError("That number is already in the call list.");
+      return;
+    }
+    setQueue([...queue, nextContact]);
+    setManualName("");
+    setManualPhone("");
+    setManualError("");
   };
 
   const onDragStart = (e, idx) => {
@@ -81,6 +100,30 @@ export default function QueueTab({ queue, setQueue, autodialOnEnd, setAutodial, 
         </label>
       </div>
 
+      <div className="px-4 py-3 grid grid-cols-1 gap-2 bg-neutral-w0 border-b border-neutral-b0-t10">
+        <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] gap-2">
+          <input
+            type="text"
+            value={manualName}
+            onChange={(e) => { setManualName(e.target.value); setManualError(""); }}
+            placeholder="Name"
+            className="min-w-0 typography-detail rounded-md border border-neutral-b0-t20 px-3 py-2 outline-none focus:border-primary-f transition-colors bg-neutral-w0"
+          />
+          <input
+            type="tel"
+            value={manualPhone}
+            onChange={(e) => { setManualPhone(e.target.value); setManualError(""); }}
+            onKeyDown={(e) => { if (e.key === "Enter") addManual(); }}
+            placeholder="Phone number"
+            className="min-w-0 typography-detail rounded-md border border-neutral-b0-t20 px-3 py-2 outline-none focus:border-primary-f transition-colors bg-neutral-w0"
+          />
+          <Button size="medium" color="primary" variant="outlined" onClick={addManual}>
+            Add
+          </Button>
+        </div>
+        {manualError && <div className="typography-descriptor text-danger-f font-medium">{manualError}</div>}
+      </div>
+
       {autodialOnEnd && !connected && (
         <div className="px-4 pt-3">
           <Alert severity="warning">
@@ -120,7 +163,7 @@ export default function QueueTab({ queue, setQueue, autodialOnEnd, setAutodial, 
         <div className="flex-1 flex items-center justify-center px-4 pb-4">
           <EmptyState
             title="Call list is empty"
-            description="Add numbers from the Found tab to start a call list."
+            description="Add names and numbers from the Found tab to start a call list."
           />
         </div>
       ) : (
@@ -160,6 +203,9 @@ export default function QueueTab({ queue, setQueue, autodialOnEnd, setAutodial, 
                   </svg>
                 </span>
                 <div className="flex-1 min-w-0 leading-tight">
+                  {item.name && (
+                    <div className="typography-subtitleMiniSemiBold text-neutral-b0 truncate">{item.name}</div>
+                  )}
                   <div className="typography-subtitleMiniSemiBold text-neutral-b0 truncate tabular-nums">{formatPhone(item.e164)}</div>
                   {item.source && (
                     <div className="typography-descriptorMini text-neutral-b1 truncate">{item.source}</div>

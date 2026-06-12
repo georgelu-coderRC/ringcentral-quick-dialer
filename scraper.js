@@ -2,6 +2,8 @@
   // NANP phone regex: matches optional +1 / 1, then (xxx) or xxx, separators ., -, space, then xxx-xxxx
   const PHONE_REGEX =
     /(?:\+?1[\s.\-]?)?\(?([2-9]\d{2})\)?[\s.\-]?([2-9]\d{2})[\s.\-]?(\d{4})(?!\d)/g;
+  const PHONE_CHECK_REGEX =
+    /(?:\+?1[\s.\-]?)?\(?([2-9]\d{2})\)?[\s.\-]?([2-9]\d{2})[\s.\-]?(\d{4})(?!\d)/;
 
   const results = new Map(); // key: e164, value: {display, contexts:Set}
   const isSheets = /docs\.google\.com\/spreadsheets/.test(location.href);
@@ -16,6 +18,29 @@
     return text.slice(start, end).replace(/\s+/g, " ").trim();
   }
 
+  function normalizeContactName(value) {
+    return String(value || "")
+      .replace(/\b(?:phone|mobile|cell|work|home|direct|number|tel)\b\s*:?\s*/gi, " ")
+      .replace(/[<>(){}\[\]"“”'`]+/g, " ")
+      .replace(/[\t,;|]+/g, " ")
+      .replace(/\s+/g, " ")
+      .trim()
+      .replace(/^[\s:.-]+|[\s:.-]+$/g, "")
+      .slice(0, 80);
+  }
+
+  function extractName(str, matchIndex, matchText, contextLabel) {
+    const before = str.slice(Math.max(0, matchIndex - 80), matchIndex);
+    const after = str.slice(matchIndex + matchText.length, matchIndex + matchText.length + 80);
+    const candidates = [before, after, contextLabel || ""];
+    for (const candidate of candidates) {
+      const name = normalizeContactName(candidate);
+      const hasPhone = PHONE_CHECK_REGEX.test(name);
+      if (/[A-Za-z]/.test(name) && !hasPhone) return name;
+    }
+    return "";
+  }
+
   function scanString(str, contextLabel) {
     if (!str) return;
     PHONE_REGEX.lastIndex = 0;
@@ -23,7 +48,9 @@
     while ((m = PHONE_REGEX.exec(str)) !== null) {
       const e164 = normalize(m[1], m[2], m[3]);
       const display = m[0].trim();
-      if (!results.has(e164)) results.set(e164, { display, contexts: new Set() });
+      const name = extractName(str, m.index, m[0], contextLabel);
+      if (!results.has(e164)) results.set(e164, { display, name, contexts: new Set() });
+      if (!results.get(e164).name && name) results.get(e164).name = name;
       results.get(e164).contexts.add(contextLabel || snippet(str, m.index, m[0].length));
     }
   }
@@ -91,10 +118,11 @@
   const items = Array.from(results.entries()).map(([e164, v]) => ({
     e164,
     display: v.display,
+    name: v.name || "",
     contexts: Array.from(v.contexts).slice(0, 3),
   }));
 
   return { items, hint: isSheets
-    ? "Google Sheets uses a canvas - Use the Paste Numbers Feature Above"
+    ? "Google Sheets uses a canvas - Use the Paste names/numbers feature above"
     : null };
 })();

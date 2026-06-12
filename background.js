@@ -339,14 +339,16 @@ async function initWebPhone() {
 
 // ---------- Dial / Hangup (RingEX desktop app via rcapp://) ----------
 async function dialNumber(e164, opts = {}) {
-  await set({ rcLastDialed: { e164, at: Date.now() } });
+  const contactName = String(opts.name || "").trim();
+  const label = contactName ? `${contactName} (${e164})` : e164;
+  await set({ rcLastDialed: { e164, name: contactName, at: Date.now() } });
   // Use an extension-origin bridge page so Chrome's "Always allow" checkbox
   // persists for all future dials regardless of the active tab's origin.
   const bridgeUrl = chrome.runtime.getURL("dial.html?n=" + encodeURIComponent(e164));
   // Default to background so the dial bridge never steals focus from the user's
   // current tab. Callers can pass { background: false } to opt into a focused tab.
   const background = opts.background !== false;
-  console.log("[bg] dialing", e164, "via bridge", bridgeUrl, background ? "(background)" : "(focused)");
+  console.log("[bg] dialing", label, "via bridge", bridgeUrl, background ? "(background)" : "(focused)");
   let tab;
   try {
     tab = await chrome.tabs.create({ url: bridgeUrl, active: !background });
@@ -362,7 +364,13 @@ async function dialNumber(e164, opts = {}) {
     const { rcTokens } = await get(["rcTokens"]);
     if (rcTokens?.access_token) await startCallPolling();
   } catch (e) { console.warn("[bg] startCallPolling skipped:", e); }
-  try { await chrome.runtime.sendMessage({ type: "rcStatus", event: "callStarted", payload: { callee: e164 } }); } catch {}
+  try {
+    await chrome.runtime.sendMessage({
+      type: "rcStatus",
+      event: "callStarted",
+      payload: { callee: e164, name: contactName, label },
+    });
+  } catch {}
 }
 
 async function hangupCall() {
@@ -518,10 +526,16 @@ async function onCallEnded() {
     await chrome.runtime.sendMessage({
       type: "rcStatus",
       event: "autodialPending",
-      payload: { e164: next.e164, delayMs, seconds },
+      payload: {
+        e164: next.e164,
+        name: next.name || "",
+        label: next.name ? `${next.name} (${next.e164})` : next.e164,
+        delayMs,
+        seconds,
+      },
     });
   } catch {}
-  setTimeout(() => dialNumber(next.e164, { background: true }).catch(console.error), delayMs);
+  setTimeout(() => dialNumber(next.e164, { background: true, name: next.name || "" }).catch(console.error), delayMs);
 }
 
 // ---------- Status broadcast ----------
@@ -568,7 +582,7 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
         await set({ autodialOnEnd: !!msg.value });
         sendResponse({ ok: true });
       } else if (msg?.type === "rcDial") {
-        await dialNumber(msg.e164);
+        await dialNumber(msg.e164, { name: msg.name || "" });
         sendResponse({ ok: true });
       } else if (msg?.type === "rcHangup") {
         await hangupCall();

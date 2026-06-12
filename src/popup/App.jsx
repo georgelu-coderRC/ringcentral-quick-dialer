@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { TabContext, Tabs, Tab } from "@ringcentral/spring-ui";
-import { useStorage, useActiveTab, useScanner, useRuntimeMessages, bg } from "./state.js";
+import { useStorage, useActiveTab, useScanner, useRuntimeMessages, bg, formatContactLabel } from "./state.js";
 import FoundTab from "./components/FoundTab.jsx";
 import QueueTab from "./components/QueueTab.jsx";
 import SettingsTab from "./components/SettingsTab.jsx";
@@ -28,13 +28,15 @@ export default function App() {
     if (msg?.type === "rcStatus") {
       refreshConn();
       if (msg.event === "callStarted")
-        setCallBar({ visible: true, text: "Dialing " + (msg.payload?.callee || "…"), inCall: false });
+        setCallBar({ visible: true, text: "Dialing " + (msg.payload?.label || msg.payload?.callee || "…"), inCall: false });
       else if (msg.event === "callAccepted")
         setCallBar({ visible: true, text: "In call", inCall: true });
       else if (msg.event === "callEnded")
         setCallBar({ visible: true, text: "Call ended", inCall: false });
       else if (msg.event === "callFailed")
         setCallBar({ visible: true, text: "Call failed: " + (msg.payload?.error || ""), inCall: false });
+      else if (msg.event === "autodialPending")
+        setCallBar({ visible: true, text: "Next: " + (msg.payload?.label || msg.payload?.e164 || "…"), inCall: false });
       if (msg.event === "callEnded" || msg.event === "callFailed") {
         setTimeout(() => setCallBar({ visible: false, text: "", inCall: false }), 3000);
       }
@@ -48,12 +50,14 @@ export default function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const dial = useCallback(async (e164) => {
-    setCallBar({ visible: true, text: "Opening RingEX for " + e164 + "…", inCall: false });
+  const dial = useCallback(async (itemOrE164) => {
+    const item = typeof itemOrE164 === "string" ? { e164: itemOrE164 } : itemOrE164;
+    const label = formatContactLabel(item);
+    setCallBar({ visible: true, text: "Opening RingEX for " + label + "…", inCall: false });
     try {
-      const r = await bg({ type: "rcDial", e164 });
+      const r = await bg({ type: "rcDial", e164: item.e164, name: item.name || "" });
       if (r?.ok === false) throw new Error(r.error || "dial failed");
-      setCallBar({ visible: true, text: "Dialing " + e164, inCall: false });
+      setCallBar({ visible: true, text: "Dialing " + label, inCall: false });
       setTimeout(() => {
         setCallBar((b) => (b.text.startsWith("Dialing") ? { visible: false, text: "", inCall: false } : b));
       }, 5000);

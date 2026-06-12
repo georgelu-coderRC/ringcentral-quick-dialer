@@ -32,7 +32,7 @@ export default function FoundTab({ items, status, scan, mergeItems, queue, setQu
     const now = Date.now();
     const newQueue = [
       ...queue,
-      ...toAdd.map((i) => ({ e164: i.e164, display: i.display, source, addedAt: now })),
+      ...toAdd.map((i) => ({ e164: i.e164, display: i.display, name: i.name || "", source, addedAt: now })),
     ];
     setQueue(newQueue);
     setSelected(new Set());
@@ -47,7 +47,22 @@ export default function FoundTab({ items, status, scan, mergeItems, queue, setQu
     }
     const map = new Map(items.map((i) => [i.e164, i]));
     let added = 0;
-    for (const p of parsed) if (!map.has(p.e164)) { map.set(p.e164, p); added++; }
+    for (const p of parsed) {
+      const existing = map.get(p.e164);
+      if (!existing) {
+        map.set(p.e164, p);
+        added++;
+      } else if (!existing.name && p.name) {
+        map.set(p.e164, { ...existing, name: p.name });
+      }
+    }
+    const queuedNameUpdates = parsed.filter((p) => p.name && queue.some((q) => q.e164 === p.e164 && !q.name));
+    if (queuedNameUpdates.length) {
+      const namesByNumber = new Map(queuedNameUpdates.map((p) => [p.e164, p.name]));
+      setQueue(queue.map((q) => (
+        !q.name && namesByNumber.has(q.e164) ? { ...q, name: namesByNumber.get(q.e164) } : q
+      )));
+    }
     mergeItems(Array.from(map.values()));
     setSelected((s) => {
       const n = new Set(s);
@@ -57,7 +72,7 @@ export default function FoundTab({ items, status, scan, mergeItems, queue, setQu
     setPasteMsg(`Found ${parsed.length} number(s)${added !== parsed.length ? ` (${added} new)` : ""}.`);
     setPasteText("");
     setTimeout(() => { setPasteOpen(false); setPasteMsg(""); }, 1200);
-  }, [items, mergeItems, queuedSet]);
+  }, [items, mergeItems, queue, setQueue, queuedSet]);
 
   const onPaste = useCallback((e) => {
     const text = e.clipboardData?.getData("text") || "";
@@ -84,7 +99,7 @@ export default function FoundTab({ items, status, scan, mergeItems, queue, setQu
       <div className="px-4 py-3 flex gap-2 flex-wrap bg-neutral-w0 border-b border-neutral-b0-t10">
         <Button size="small" variant="outlined" onClick={scan}>Rescan</Button>
         <Button size="small" variant="outlined" onClick={() => setPasteOpen((p) => !p)}>
-          {pasteOpen ? "Hide paste" : "Paste numbers"}
+          {pasteOpen ? "Hide paste" : "Paste names/numbers"}
         </Button>
         <Button size="small" variant="outlined" onClick={selectAll} disabled={!availableCount}>
           {availableCount && items.filter(i => !isQueued(i.e164)).every(i => selected.has(i.e164)) ? "Unselect all" : "Select all"}
@@ -98,7 +113,7 @@ export default function FoundTab({ items, status, scan, mergeItems, queue, setQu
       {pasteOpen && (
         <div className="px-4 py-3 flex flex-col gap-2 bg-neutral-w0 border-b border-neutral-b0-t10">
           <textarea
-            placeholder="Press Cmd+V (or Ctrl+V) here to paste numbers…"
+            placeholder="Paste names and numbers, for example: Jane Doe, (555) 123-4567"
             value={pasteText}
             onChange={onTextChange}
             onPaste={onPaste}
@@ -108,7 +123,7 @@ export default function FoundTab({ items, status, scan, mergeItems, queue, setQu
           />
           {pasteMsg && <div className="typography-descriptor text-success-f font-medium">{pasteMsg}</div>}
           <div className="typography-descriptor text-neutral-b1">
-            Tip: in Google Sheets, select the column → Cmd+C → click here → Cmd+V.
+            Tip: copy name and phone columns from Google Sheets, then paste here.
           </div>
         </div>
       )}
@@ -125,7 +140,7 @@ export default function FoundTab({ items, status, scan, mergeItems, queue, setQu
         <div className="flex-1 flex items-center justify-center px-4 pb-4">
           <EmptyState
             title="No numbers yet"
-            description="Rescan the page or paste a list of phone numbers."
+            description="Rescan the page or paste names and phone numbers."
           />
         </div>
       ) : (
@@ -147,6 +162,9 @@ export default function FoundTab({ items, status, scan, mergeItems, queue, setQu
                   onChange={() => toggle(item.e164)}
                 />
                 <div className="flex-1 min-w-0">
+                  {item.name && (
+                    <div className="typography-subtitleMiniSemiBold text-neutral-b0 truncate">{item.name}</div>
+                  )}
                   <div className="typography-subtitleMiniSemiBold text-neutral-b0 truncate tabular-nums">{formatPhone(item.e164)}</div>
                 </div>
                 {queued ? (
@@ -154,7 +172,7 @@ export default function FoundTab({ items, status, scan, mergeItems, queue, setQu
                     In list
                   </span>
                 ) : (
-                  <Button size="small" color="primary" variant="contained" onClick={() => dial(item.e164)}>
+                  <Button size="small" color="primary" variant="contained" onClick={() => dial(item)}>
                     Call
                   </Button>
                 )}

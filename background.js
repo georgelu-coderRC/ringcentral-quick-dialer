@@ -339,7 +339,8 @@ async function initWebPhone() {
 
 // ---------- Dial / Hangup (RingEX desktop app via rcapp://) ----------
 async function dialNumber(e164, opts = {}) {
-  const contactName = String(opts.name || "").trim();
+  const { contactNamesEnabled = true } = await get(["contactNamesEnabled"]);
+  const contactName = contactNamesEnabled === false ? "" : String(opts.name || "").trim();
   const label = contactName ? `${contactName} (${e164})` : e164;
   await set({ rcLastDialed: { e164, name: contactName, at: Date.now() } });
   // Use an extension-origin bridge page so Chrome's "Always allow" checkbox
@@ -513,11 +514,13 @@ async function resumePollIfNeeded() {
 
 // ---------- Auto-dial logic ----------
 async function onCallEnded() {
-  const { autodialOnEnd, queue, autodialDelaySec } = await get(["autodialOnEnd", "queue", "autodialDelaySec"]);
+  const { autodialOnEnd, queue, autodialDelaySec, contactNamesEnabled = true } =
+    await get(["autodialOnEnd", "queue", "autodialDelaySec", "contactNamesEnabled"]);
   if (!autodialOnEnd) return;
   if (!Array.isArray(queue) || queue.length === 0) return;
   const next = queue.shift();
   await set({ queue });
+  const nextName = contactNamesEnabled === false ? "" : next.name || "";
   // Configurable wait so reps have time to log notes before the next call.
   // Default 5s if unset; clamp to a sane range.
   const seconds = Math.min(600, Math.max(0, Number(autodialDelaySec ?? 5)));
@@ -528,14 +531,14 @@ async function onCallEnded() {
       event: "autodialPending",
       payload: {
         e164: next.e164,
-        name: next.name || "",
-        label: next.name ? `${next.name} (${next.e164})` : next.e164,
+        name: nextName,
+        label: nextName ? `${nextName} (${next.e164})` : next.e164,
         delayMs,
         seconds,
       },
     });
   } catch {}
-  setTimeout(() => dialNumber(next.e164, { background: true, name: next.name || "" }).catch(console.error), delayMs);
+  setTimeout(() => dialNumber(next.e164, { background: true, name: nextName }).catch(console.error), delayMs);
 }
 
 // ---------- Status broadcast ----------

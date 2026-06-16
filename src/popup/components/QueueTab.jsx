@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Button, Switch, Alert, EmptyState } from "@ringcentral/spring-ui";
 import { formatPhone, parseNumbers } from "../state.js";
 
-export default function QueueTab({ queue, setQueue, autodialOnEnd, setAutodial, dial, pollStatus, connected, switchTo }) {
+export default function QueueTab({ queue, setQueue, autodialOnEnd, setAutodial, dial, pollStatus, connected, switchTo, contactNamesEnabled }) {
   const [dragIdx, setDragIdx] = useState(null);
   const [overIdx, setOverIdx] = useState(null);
   const [manualName, setManualName] = useState("");
@@ -35,12 +35,18 @@ export default function QueueTab({ queue, setQueue, autodialOnEnd, setAutodial, 
     setQueue([]);
   };
   const addManual = () => {
-    const parsed = parseNumbers(`${manualName}\t${manualPhone}`, "manual entry");
+    const manualText = contactNamesEnabled ? `${manualName}\t${manualPhone}` : manualPhone;
+    const parsed = parseNumbers(manualText, "manual entry", { includeNames: contactNamesEnabled });
     if (!parsed.length) {
       setManualError("Enter a valid phone number.");
       return;
     }
-    const nextContact = { ...parsed[0], name: manualName.trim() || parsed[0].name || "", source: "manual entry", addedAt: Date.now() };
+    const nextContact = {
+      ...parsed[0],
+      name: contactNamesEnabled ? manualName.trim() || parsed[0].name || "" : "",
+      source: "manual entry",
+      addedAt: Date.now(),
+    };
     if (queue.some((q) => q.e164 === nextContact.e164)) {
       setManualError("That number is already in the call list.");
       return;
@@ -101,14 +107,16 @@ export default function QueueTab({ queue, setQueue, autodialOnEnd, setAutodial, 
       </div>
 
       <div className="px-4 py-3 grid grid-cols-1 gap-2 bg-neutral-w0 border-b border-neutral-b0-t10">
-        <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] gap-2">
-          <input
-            type="text"
-            value={manualName}
-            onChange={(e) => { setManualName(e.target.value); setManualError(""); }}
-            placeholder="Name"
-            className="min-w-0 typography-detail rounded-md border border-neutral-b0-t20 px-3 py-2 outline-none focus:border-primary-f transition-colors bg-neutral-w0"
-          />
+        <div className={contactNamesEnabled ? "grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] gap-2" : "grid grid-cols-[minmax(0,1fr)_auto] gap-2"}>
+          {contactNamesEnabled && (
+            <input
+              type="text"
+              value={manualName}
+              onChange={(e) => { setManualName(e.target.value); setManualError(""); }}
+              placeholder="Name"
+              className="min-w-0 typography-detail rounded-md border border-neutral-b0-t20 px-3 py-2 outline-none focus:border-primary-f transition-colors bg-neutral-w0"
+            />
+          )}
           <input
             type="tel"
             value={manualPhone}
@@ -163,7 +171,7 @@ export default function QueueTab({ queue, setQueue, autodialOnEnd, setAutodial, 
         <div className="flex-1 flex items-center justify-center px-4 pb-4">
           <EmptyState
             title="Call list is empty"
-            description="Add names and numbers from the Found tab to start a call list."
+            description={contactNamesEnabled ? "Add names and numbers from the Found tab to start a call list." : "Add numbers from the Found tab to start a call list."}
           />
         </div>
       ) : (
@@ -203,7 +211,7 @@ export default function QueueTab({ queue, setQueue, autodialOnEnd, setAutodial, 
                   </svg>
                 </span>
                 <div className="flex-1 min-w-0 leading-tight">
-                  {item.name && (
+                  {contactNamesEnabled && item.name && (
                     <div className="typography-subtitleMiniSemiBold text-neutral-b0 truncate">{item.name}</div>
                   )}
                   <div className="typography-subtitleMiniSemiBold text-neutral-b0 truncate tabular-nums">{formatPhone(item.e164)}</div>

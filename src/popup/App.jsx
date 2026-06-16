@@ -11,6 +11,7 @@ export default function App() {
   const { items, status, scan, mergeItems } = useScanner(tab);
   const [queue, setQueue] = useStorage("queue", []);
   const [autodialOnEnd, setAutodial] = useStorage("autodialOnEnd", false);
+  const [contactNamesEnabled, setContactNamesEnabled] = useStorage("contactNamesEnabled", true);
   const [activeTab, setActiveTab] = useState("found");
 
   const [conn, setConn] = useState({ connected: false, redirectUri: "" });
@@ -52,10 +53,11 @@ export default function App() {
 
   const dial = useCallback(async (itemOrE164) => {
     const item = typeof itemOrE164 === "string" ? { e164: itemOrE164 } : itemOrE164;
-    const label = formatContactLabel(item);
+    const dialItem = contactNamesEnabled ? item : { ...item, name: "" };
+    const label = formatContactLabel(dialItem);
     setCallBar({ visible: true, text: "Opening RingEX for " + label + "…", inCall: false });
     try {
-      const r = await bg({ type: "rcDial", e164: item.e164, name: item.name || "" });
+      const r = await bg({ type: "rcDial", e164: dialItem.e164, name: dialItem.name || "" });
       if (r?.ok === false) throw new Error(r.error || "dial failed");
       setCallBar({ visible: true, text: "Dialing " + label, inCall: false });
       setTimeout(() => {
@@ -64,7 +66,7 @@ export default function App() {
     } catch (e) {
       setCallBar({ visible: true, text: "Dial error: " + (e?.message || e), inCall: false });
     }
-  }, []);
+  }, [contactNamesEnabled]);
 
   const tabs = [
     { id: "found", label: `Found (${items.length})` },
@@ -121,6 +123,7 @@ export default function App() {
             items={items} status={status} scan={scan} mergeItems={mergeItems}
             queue={queue} setQueue={setQueue}
             tabUrl={tab.url} dial={dial} switchTo={setActiveTab}
+            contactNamesEnabled={contactNamesEnabled}
           />
         )}
         {activeTab === "queue" && (
@@ -133,10 +136,16 @@ export default function App() {
             }}
             dial={dial} pollStatus={pollStatus} connected={conn.connected}
             switchTo={setActiveTab}
+            contactNamesEnabled={contactNamesEnabled}
           />
         )}
         {activeTab === "settings" && (
-          <SettingsTab conn={conn} onChange={refreshConn} />
+          <SettingsTab
+            conn={conn}
+            onChange={refreshConn}
+            contactNamesEnabled={contactNamesEnabled}
+            setContactNamesEnabled={setContactNamesEnabled}
+          />
         )}
       </main>
 

@@ -99,14 +99,15 @@ export function useActiveTab() {
   return tab;
 }
 
-export function parseNumbers(text, contextLabel = "from pasted text") {
+export function parseNumbers(text, contextLabel = "from pasted text", opts = {}) {
+  const includeNames = opts.includeNames !== false;
   const map = new Map();
   for (const line of String(text || "").split(/\r?\n/)) {
     PHONE_REGEX.lastIndex = 0;
     let m;
     while ((m = PHONE_REGEX.exec(line)) !== null) {
       const e164 = `+1${m[1]}${m[2]}${m[3]}`;
-      const name = extractNameFromLine(line, m.index, m[0]);
+      const name = includeNames ? extractNameFromLine(line, m.index, m[0]) : "";
       const existing = map.get(e164);
       if (!existing) {
         map.set(e164, { e164, display: m[0].trim(), name, contexts: [contextLabel] });

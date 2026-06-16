@@ -8,7 +8,7 @@ Click the Quick Dialer icon in your Chrome toolbar to open the side panel on the
 |---|---|
 | **FOUND** | Phone numbers and contact names detected on the current web page (count shown in tab) |
 | **CALL LIST** | Your dialing queue (count shown in tab) |
-| **SETTINGS** | Connection and preferences |
+| **SETTINGS** | Connection and preferences, including the contact-name toggle |
 
 ## Adding contacts to your call list
 
@@ -51,6 +51,10 @@ Switch to the **CALL LIST** tab to manage and dial your queue.
 - **Remove** — click the **×** on the right side of any row.
 - **Clear list** — empties the entire call list.
 - **Auto-dial toggle** — flip the blue switch to enable or disable auto-dial without changing your interval.
+
+## Contact-name setting
+
+Open **Settings** and use **Contact names** to choose whether the extension captures and displays names beside phone numbers. When the setting is off, pasted rows, manual entries, found results, and auto-dial status use phone numbers only.
 
 ## Dialing a call
 

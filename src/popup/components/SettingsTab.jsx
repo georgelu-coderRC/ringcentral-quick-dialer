@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { Button, TextField, Alert } from "@ringcentral/spring-ui";
+import { Button, TextField, Alert, Switch } from "@ringcentral/spring-ui";
 import { bg } from "../state.js";
 
-export default function SettingsTab({ conn, onChange }) {
+export default function SettingsTab({ conn, onChange, contactNamesEnabled, setContactNamesEnabled }) {
   const [clientId, setClientId] = useState("");
   const [savedMsg, setSavedMsg] = useState("");
   const [busy, setBusy] = useState(false);
@@ -210,6 +210,22 @@ export default function SettingsTab({ conn, onChange }) {
             <span className="typography-descriptor text-success-f font-medium">✓ Saved</span>
           )}
         </div>
+      </section>
+
+      <section className="flex flex-col gap-3 px-4 py-4 border-b border-neutral-b0-t10">
+        <div>
+          <h3 className="typography-subtitleBold m-0 text-neutral-b0">Contact names</h3>
+          <p className="typography-descriptor text-neutral-b1 m-0 mt-1">
+            Include names beside phone numbers in found results, manual entries, and the call list.
+          </p>
+        </div>
+        <label className="flex items-center justify-between gap-3 cursor-pointer typography-detail text-neutral-b0">
+          <span>{contactNamesEnabled ? "Names enabled" : "Numbers only"}</span>
+          <Switch
+            checked={!!contactNamesEnabled}
+            onChange={(e) => setContactNamesEnabled(e.target.checked)}
+          />
+        </label>
       </section>
 
     </div>

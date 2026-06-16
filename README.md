@@ -10,6 +10,7 @@ A Chrome extension that finds phone numbers on any web page and dials them throu
 - Paste names and numbers from Google Sheets, Excel, or CSV — numbers are normalized to E.164
 - Drag-and-drop call list with "Up next" pill
 - Auto-dial the next number after a configurable delay (off / 3s / 5s / 10s / 30s / custom)
+- Settings toggle for contact-name capture and display
 - Live call status indicator (Ready / Ringing / On a call / Wrapping up)
 - Calls launch in a background tab so your workflow keeps focus
 - Clean RingCentral-styled side panel
@@ -28,7 +29,7 @@ See the [User Guide PDF](docs/RingCentral-Quick-Dialer-User-Guide.pdf) for full 
 
 - **Found tab** — phone numbers and contact names detected on the current page. Check ones to add, or click `Call` to dial immediately.
 - **Call list tab** — your queue. Add a name and number manually, drag to reorder, or click `Call next` to dial the top item.
-- **Settings tab** — connect/disconnect RingCentral, set the auto-dial interval.
+- **Settings tab** — connect/disconnect RingCentral, set the auto-dial interval, and toggle contact names.
 
 For Google Sheets (which renders on a canvas), use **Paste names/numbers** in the Found tab and copy both name and phone columns when available.
 

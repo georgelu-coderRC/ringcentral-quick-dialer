@@ -338,11 +338,48 @@ async function initWebPhone() {
 }
 
 // ---------- Dial / Hangup (RingEX desktop app via rcapp://) ----------
+let autodialTimer = null;
+
+function callLabel(item) {
+  const name = String(item?.name || "").trim();
+  return name ? `${name} (${item.e164})` : item?.e164;
+}
+
+async function clearPendingAutodial() {
+  if (autodialTimer) {
+    clearTimeout(autodialTimer);
+    autodialTimer = null;
+  }
+  await set({ autodialPending: null });
+}
+
+async function completeActiveCall() {
+  const { activeCallItem, queue } = await get(["activeCallItem", "queue"]);
+  if (!activeCallItem?.e164) {
+    return null;
+  }
+  const nextQueue = Array.isArray(queue)
+    ? queue.filter((item) => item?.e164 !== activeCallItem.e164)
+    : [];
+  await set({ activeCallItem: null, autodialPending: null, queue: nextQueue });
+  return activeCallItem;
+}
+
 async function dialNumber(e164, opts = {}) {
   const { contactNamesEnabled = true } = await get(["contactNamesEnabled"]);
   const contactName = contactNamesEnabled === false ? "" : String(opts.name || "").trim();
-  const label = contactName ? `${contactName} (${e164})` : e164;
-  await set({ rcLastDialed: { e164, name: contactName, at: Date.now() } });
+  const activeCallItem = {
+    ...(opts.item || {}),
+    e164,
+    name: contactName,
+    activeAt: Date.now(),
+  };
+  const label = callLabel(activeCallItem);
+  await clearPendingAutodial();
+  await set({
+    rcLastDialed: { e164, name: contactName, at: Date.now() },
+    activeCallItem,
+  });
   // Use an extension-origin bridge page so Chrome's "Always allow" checkbox
   // persists for all future dials regardless of the active tab's origin.
   const bridgeUrl = chrome.runtime.getURL("dial.html?n=" + encodeURIComponent(e164));
@@ -459,8 +496,8 @@ async function pollOnce() {
   // Detect transition from active call → no call
   if (state.prevStatus !== "NoCall" && status === "NoCall") {
     console.log("[bg] CALL ENDED — triggering autodial");
-    try { await chrome.runtime.sendMessage({ type: "rcStatus", event: "callEnded", payload: {} }); } catch {}
-    await onCallEnded();
+    const ended = await onCallEnded();
+    try { await chrome.runtime.sendMessage({ type: "rcStatus", event: "callEnded", payload: ended || {} }); } catch {}
   }
 
   await setPollState({
@@ -514,31 +551,40 @@ async function resumePollIfNeeded() {
 
 // ---------- Auto-dial logic ----------
 async function onCallEnded() {
-  const { autodialOnEnd, queue, autodialDelaySec, contactNamesEnabled = true } =
-    await get(["autodialOnEnd", "queue", "autodialDelaySec", "contactNamesEnabled"]);
-  if (!autodialOnEnd) return;
-  if (!Array.isArray(queue) || queue.length === 0) return;
-  const next = queue.shift();
-  await set({ queue });
+  const ended = await completeActiveCall();
+  const { autodialOnEnd, queue, autodialDelaySec, contactNamesEnabled = true, autodialPending } =
+    await get(["autodialOnEnd", "queue", "autodialDelaySec", "contactNamesEnabled", "autodialPending"]);
+  if (!autodialOnEnd) return ended;
+  if (!Array.isArray(queue) || queue.length === 0) return ended;
+  if (autodialPending?.fireAt && autodialPending.fireAt > Date.now()) return ended;
+  const next = queue[0];
   const nextName = contactNamesEnabled === false ? "" : next.name || "";
   // Configurable wait so reps have time to log notes before the next call.
   // Default 5s if unset; clamp to a sane range.
   const seconds = Math.min(600, Math.max(0, Number(autodialDelaySec ?? 5)));
   const delayMs = Math.max(800, seconds * 1000);
+  const pending = {
+    e164: next.e164,
+    name: nextName,
+    label: callLabel({ ...next, name: nextName }),
+    delayMs,
+    seconds,
+    fireAt: Date.now() + delayMs,
+  };
+  await set({ autodialPending: pending });
   try {
     await chrome.runtime.sendMessage({
       type: "rcStatus",
       event: "autodialPending",
-      payload: {
-        e164: next.e164,
-        name: nextName,
-        label: nextName ? `${nextName} (${next.e164})` : next.e164,
-        delayMs,
-        seconds,
-      },
+      payload: pending,
     });
   } catch {}
-  setTimeout(() => dialNumber(next.e164, { background: true, name: nextName }).catch(console.error), delayMs);
+  if (autodialTimer) clearTimeout(autodialTimer);
+  autodialTimer = setTimeout(() => {
+    autodialTimer = null;
+    dialNumber(next.e164, { background: true, name: nextName, item: next }).catch(console.error);
+  }, delayMs);
+  return ended;
 }
 
 // ---------- Status broadcast ----------
@@ -583,9 +629,10 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
         sendResponse({ ok: true });
       } else if (msg?.type === "rcSetAutodialOnEnd") {
         await set({ autodialOnEnd: !!msg.value });
+        if (!msg.value) await clearPendingAutodial();
         sendResponse({ ok: true });
       } else if (msg?.type === "rcDial") {
-        await dialNumber(msg.e164, { name: msg.name || "" });
+        await dialNumber(msg.e164, { name: msg.name || "", item: msg.item });
         sendResponse({ ok: true });
       } else if (msg?.type === "rcHangup") {
         await hangupCall();

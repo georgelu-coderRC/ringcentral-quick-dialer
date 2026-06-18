@@ -11,8 +11,11 @@ export default function App() {
   const { items, status, scan, mergeItems } = useScanner(tab);
   const [queue, setQueue] = useStorage("queue", []);
   const [autodialOnEnd, setAutodial] = useStorage("autodialOnEnd", false);
+  const [activeCallItem] = useStorage("activeCallItem", null);
+  const [autodialPending] = useStorage("autodialPending", null);
   const [contactNamesEnabled, setContactNamesEnabled] = useStorage("contactNamesEnabled", true);
   const [activeTab, setActiveTab] = useState("found");
+  const [now, setNow] = useState(Date.now());
 
   const [conn, setConn] = useState({ connected: false, redirectUri: "" });
   const refreshConn = useCallback(async () => {
@@ -22,6 +25,12 @@ export default function App() {
     } catch {}
   }, []);
   useEffect(() => { refreshConn(); }, [refreshConn]);
+  useEffect(() => {
+    if (!autodialPending?.fireAt) return undefined;
+    setNow(Date.now());
+    const id = setInterval(() => setNow(Date.now()), 500);
+    return () => clearInterval(id);
+  }, [autodialPending?.fireAt]);
 
   const [callBar, setCallBar] = useState({ visible: false, text: "", inCall: false });
   const [pollStatus, setPollStatus] = useState(null);
@@ -57,7 +66,7 @@ export default function App() {
     const label = formatContactLabel(dialItem);
     setCallBar({ visible: true, text: "Opening RingEX for " + label + "…", inCall: false });
     try {
-      const r = await bg({ type: "rcDial", e164: dialItem.e164, name: dialItem.name || "" });
+      const r = await bg({ type: "rcDial", e164: dialItem.e164, name: dialItem.name || "", item: dialItem });
       if (r?.ok === false) throw new Error(r.error || "dial failed");
       setCallBar({ visible: true, text: "Dialing " + label, inCall: false });
       setTimeout(() => {
@@ -73,6 +82,16 @@ export default function App() {
     { id: "queue", label: `Call list (${queue.length})` },
     { id: "settings", label: "Settings" },
   ];
+
+  const autodialCountdown = autodialPending?.fireAt
+    ? Math.max(0, Math.ceil((autodialPending.fireAt - now) / 1000))
+    : null;
+  const autodialLabel = autodialPending
+    ? (autodialPending.label || formatContactLabel(autodialPending))
+    : "";
+  const callBarText = autodialCountdown !== null
+    ? `Next auto-dial in ${autodialCountdown}s: ${autodialLabel}`
+    : callBar.text;
 
   return (
     <div className="flex flex-col h-full bg-neutral-w0">
@@ -137,6 +156,9 @@ export default function App() {
             dial={dial} pollStatus={pollStatus} connected={conn.connected}
             switchTo={setActiveTab}
             contactNamesEnabled={contactNamesEnabled}
+            activeCallItem={activeCallItem}
+            autodialPending={autodialPending}
+            autodialCountdown={autodialCountdown}
           />
         )}
         {activeTab === "settings" && (
@@ -149,7 +171,12 @@ export default function App() {
         )}
       </main>
 
-      <CallBar {...callBar} onHangup={() => bg({ type: "rcHangup" })} />
+      <CallBar
+        {...callBar}
+        visible={callBar.visible || autodialCountdown !== null}
+        text={callBarText}
+        onHangup={() => bg({ type: "rcHangup" })}
+      />
     </div>
   );
 }

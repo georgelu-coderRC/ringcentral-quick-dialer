@@ -1,8 +1,9 @@
 {
   "manifest_version": 3,
   "name": "RingCentral Quick Dialer",
-  "version": "3.0.2",
+  "version": "3.0.3",
   "description": "Scrape phone numbers, queue them, and auto-dial via RingCentral Web Phone (WebRTC).",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA5EykOvfN7ZNgYqpQ/wg2G5oGoenDGLTJ8oO85jc3vt6VwrBwsFVz6lLKfwveMH+qV8yUUmMdiwYeoQQbn+Vq4oMFqHSXro92I9ZMsnMqdyIQ5unmXWZSGOBw9jCohk89/txjS3P/OcpA/Tzxh9KqBhE0aSEKBHwhxGI8DpzlIS5cHGpsuKGyzW0KzLGiqSJeZ5FhMEk2uYVvQJtK2oZnnIGHH6m/oHDSEbNaQ6FPeMr2PAIlBfAPr8pO4KgEnNZvPCWO08N6nuSMHrwloLIyrBwu0LKjCLTbzv1QmKK+cEnBJbrchW5vOb72DbroH2e8xx0lTzvD3saAiRBOAECFqQIDAQAB",
   "permissions": [
     "activeTab",
     "scripting",
